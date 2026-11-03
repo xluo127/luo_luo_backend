@@ -1,0 +1,147 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model NavNode {
+  id            Int        @id @default(autoincrement())
+  title         String
+  url           String?
+  permissionKey String?    @unique
+  visible       Boolean    @default(true)
+  sortOrder     Int        @default(0)
+  parentId      Int?
+  parent        NavNode?   @relation("NodeToNode", fields: [parentId], references: [id])
+  children      NavNode[]  @relation("NodeToNode")
+  userMenus     UserMenu[]
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @default(now()) @updatedAt
+}
+
+model User {
+  id           Int       @id @default(autoincrement())
+  username     String    @unique
+  passwordHash String
+  displayName  String
+  status       String    @default("active")
+  isAdmin      Boolean   @default(false)
+  sessions     Session[]
+  menus        UserMenu[]
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+}
+
+model Session {
+  id        Int      @id @default(autoincrement())
+  tokenHash String   @unique
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([userId, expiresAt])
+}
+
+model UserMenu {
+  userId    Int
+  menuId    Int
+  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  menu      NavNode @relation(fields: [menuId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@id([userId, menuId])
+}
+
+model LearningCategory {
+  id          Int                @id @default(autoincrement())
+  name        String
+  slug        String             @unique
+  description String?            @db.Text
+  parentId    Int?
+  sortOrder   Int                @default(0)
+  parent      LearningCategory?  @relation("CategoryToCategory", fields: [parentId], references: [id])
+  children    LearningCategory[] @relation("CategoryToCategory")
+  points      KnowledgePoint[]
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+}
+
+model KnowledgePoint {
+  id         Int                @id @default(autoincrement())
+  categoryId Int
+  title      String
+  slug       String
+  summary    String?            @db.Text
+  status     String             @default("not_started")
+  progress   Int                @default(0)
+  sortOrder  Int                @default(0)
+  category   LearningCategory   @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  note       LearningNote?
+  questions  LearningQuestion[]
+  examples   CodeExample[]
+  attempts   QuizAttempt[]
+  createdAt  DateTime           @default(now())
+  updatedAt  DateTime           @updatedAt
+
+  @@unique([categoryId, slug])
+}
+
+model LearningNote {
+  id               Int            @id @default(autoincrement())
+  knowledgePointId Int            @unique
+  keyPoints        String         @db.Text
+  body             String?        @db.Text
+  knowledgePoint   KnowledgePoint @relation(fields: [knowledgePointId], references: [id], onDelete: Cascade)
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+}
+
+model LearningQuestion {
+  id               Int            @id @default(autoincrement())
+  knowledgePointId Int
+  prompt           String         @db.Text
+  options          Json?
+  answer           String         @db.Text
+  explanation      String?        @db.Text
+  sortOrder        Int            @default(0)
+  knowledgePoint   KnowledgePoint @relation(fields: [knowledgePointId], references: [id], onDelete: Cascade)
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+}
+
+model CodeExample {
+  id               Int            @id @default(autoincrement())
+  knowledgePointId Int
+  title            String
+  language         String
+  code             String         @db.Text
+  description      String?        @db.Text
+  runnable         Boolean        @default(false)
+  sortOrder        Int            @default(0)
+  knowledgePoint   KnowledgePoint @relation(fields: [knowledgePointId], references: [id], onDelete: Cascade)
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+}
+
+model QuizAttempt {
+  id               Int            @id @default(autoincrement())
+  knowledgePointId Int
+  score            Int
+  correctCount     Int
+  totalCount       Int
+  results          Json
+  knowledgePoint   KnowledgePoint @relation(fields: [knowledgePointId], references: [id], onDelete: Cascade)
+  createdAt        DateTime       @default(now())
+
+  @@index([knowledgePointId, createdAt])
+}

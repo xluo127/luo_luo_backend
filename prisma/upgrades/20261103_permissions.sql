@@ -1,0 +1,41 @@
+ALTER TABLE `NavNode`
+  ADD COLUMN `permissionKey` VARCHAR(191) NULL,
+  ADD COLUMN `sortOrder` INTEGER NOT NULL DEFAULT 0,
+  ADD COLUMN `updatedAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+  ADD COLUMN `visible` BOOLEAN NOT NULL DEFAULT true;
+
+CREATE TABLE `User` (
+  `id` INTEGER NOT NULL AUTO_INCREMENT,
+  `username` VARCHAR(191) NOT NULL,
+  `passwordHash` VARCHAR(191) NOT NULL,
+  `displayName` VARCHAR(191) NOT NULL,
+  `status` VARCHAR(191) NOT NULL DEFAULT 'active',
+  `isAdmin` BOOLEAN NOT NULL DEFAULT false,
+  `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+  `updatedAt` DATETIME(3) NOT NULL,
+  UNIQUE INDEX `User_username_key`(`username`),
+  PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+CREATE TABLE `Session` (
+  `id` INTEGER NOT NULL AUTO_INCREMENT,
+  `tokenHash` VARCHAR(191) NOT NULL,
+  `userId` INTEGER NOT NULL,
+  `expiresAt` DATETIME(3) NOT NULL,
+  `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+  UNIQUE INDEX `Session_tokenHash_key`(`tokenHash`),
+  INDEX `Session_userId_expiresAt_idx`(`userId`, `expiresAt`),
+  PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+CREATE TABLE `UserMenu` (
+  `userId` INTEGER NOT NULL,
+  `menuId` INTEGER NOT NULL,
+  `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+  PRIMARY KEY (`userId`, `menuId`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+CREATE UNIQUE INDEX `NavNode_permissionKey_key` ON `NavNode`(`permissionKey`);
+ALTER TABLE `Session` ADD CONSTRAINT `Session_userId_fkey` FOREIGN KEY (`userId`) REFERENCES `User`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE `UserMenu` ADD CONSTRAINT `UserMenu_userId_fkey` FOREIGN KEY (`userId`) REFERENCES `User`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE `UserMenu` ADD CONSTRAINT `UserMenu_menuId_fkey` FOREIGN KEY (`menuId`) REFERENCES `NavNode`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
