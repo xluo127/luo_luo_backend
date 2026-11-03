@@ -23,6 +23,8 @@
 
 ## Description
 
+登录、首次管理员设置、菜单授权规则与数据库升级说明见 [PERMISSIONS.md](./PERMISSIONS.md)。
+
 [Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
 
 ## Project setup

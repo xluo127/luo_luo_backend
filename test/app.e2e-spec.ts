@@ -16,11 +16,17 @@ describe('AppController (e2e)', () => {
     await app.init();
   });
 
-  it('/ (GET)', () => {
+  it('requires login by default', () => {
     return request(app.getHttpServer())
       .get('/')
-      .expect(200)
-      .expect('Hello World!');
+      .expect(401);
+  });
+
+  it('protects navigation and learning APIs', async () => {
+    await request(app.getHttpServer()).get('/nav').expect(401);
+    await request(app.getHttpServer()).get('/learning/overview').expect(401);
+    await request(app.getHttpServer()).get('/permissions/menus').expect(401);
+    await request(app.getHttpServer()).get('/users').expect(401);
   });
 
   afterEach(async () => {

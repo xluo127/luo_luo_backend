@@ -7,6 +7,8 @@
   "license": "UNLICENSED",
   "type": "module",
   "scripts": {
+    "user:promote": "node --env-file=.env scripts/promote-admin.mjs",
+    "test:permissions": "node --env-file=.env scripts/check-permissions.mjs",
     "build": "nest build",
     "deploy": "nest deploy",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
